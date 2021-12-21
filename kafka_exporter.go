@@ -55,6 +55,7 @@ var (
 	consumergroupLagSum                *prometheus.Desc
 	consumergroupLagZookeeper          *prometheus.Desc
 	consumergroupMembers               *prometheus.Desc
+	consumergroupMembersDetail         *prometheus.Desc
 )
 
 // Exporter collects Kafka stats from the given server and exports them using
@@ -567,6 +568,10 @@ func (e *Exporter) collect(ch chan<- prometheus.Metric) {
 						return
 					}
 					for topic, partions := range assignment.Topics {
+						//added by wangtao26 for add metrics: 
+						ch <- prometheus.MustNewConstMetric(
+							consumergroupMembersDetail, prometheus.GaugeValue, 1, group.GroupId, topic, member.ClientId, member.ClientHost,
+						)
 						for _, partition := range partions {
 							offsetFetchRequest.AddPartition(topic, partition)
 						}
@@ -858,6 +863,12 @@ func setup(
 	consumergroupMembers = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "consumergroup", "members"),
 		"Amount of members in a consumer group",
+		[]string{"consumergroup"}, labels,
+	)
+
+	consumergroupMembersDetail = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "consumergroup", "membersDetail"),
+		"Detail of members in a consumer group",
 		[]string{"consumergroup"}, labels,
 	)
 
